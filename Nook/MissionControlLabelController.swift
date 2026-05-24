@@ -112,7 +112,7 @@ private final class MCOverlayWindowController: NSWindowController {
             let localRect = axToWindow(spec.axFrame, screenHeight: screen.frame.height)
             let labelView = SpaceLabelView(text: spec.text, frame: labelRect(for: localRect))
 
-            labelView.onDoubleClick = { [weak win] in
+            labelView.onContextClick = { [weak win] in
                 guard let win, let uuid = spec.uuid else { return }
                 onRename(uuid, labelView.frame, win)
             }
@@ -131,12 +131,14 @@ private func axToWindow(_ axRect: CGRect, screenHeight: CGFloat) -> CGRect {
     CGRect(x: axRect.minX, y: screenHeight - axRect.maxY, width: axRect.width, height: axRect.height)
 }
 
-// Label is 120 × 18 pt, centered horizontally on the thumbnail, 6 pt from the top edge.
+// Positioned directly below the thumbnail, covering macOS's native "Desktop N" label.
+// AppKit minY = bottom edge of thumbnail; subtracting (h + gap) places the label
+// flush below it with a small offset to align with the native label baseline.
 private func labelRect(for thumbnailWindow: CGRect) -> CGRect {
-    let w: CGFloat = min(120, thumbnailWindow.width)
-    let h: CGFloat = 18
+    let w: CGFloat = thumbnailWindow.width
+    let h: CGFloat = 22
     let x = thumbnailWindow.midX - w / 2
-    let y = thumbnailWindow.maxY - h - 6   // 6 pt from the top edge of the thumbnail (AppKit: maxY = top)
+    let y = thumbnailWindow.minY - h - 6
     return CGRect(x: x, y: y, width: w, height: h)
 }
 
@@ -158,10 +160,22 @@ private final class MCOverlayContentView: NSView {
 // MARK: - SpaceLabelView
 
 private final class SpaceLabelView: NSView {
-    var onDoubleClick: (() -> Void)?
+    var onContextClick: (() -> Void)?
 
     init(text: String, frame: CGRect) {
         super.init(frame: frame)
+
+        // Blurred backdrop hides the native macOS "Desktop N" label underneath
+        // (which is part of the Mission Control window, behind our overlay).
+        let backdrop = NSVisualEffectView(frame: bounds)
+        backdrop.material = .hudWindow
+        backdrop.blendingMode = .behindWindow
+        backdrop.state = .active
+        backdrop.wantsLayer = true
+        backdrop.layer?.cornerRadius = 6
+        backdrop.layer?.masksToBounds = true
+        backdrop.autoresizingMask = [.width, .height]
+        addSubview(backdrop)
 
         let tf = NSTextField(labelWithString: text)
         tf.font          = .systemFont(ofSize: 12, weight: .medium)
@@ -173,20 +187,17 @@ private final class SpaceLabelView: NSView {
         tf.alignment     = .center
         tf.lineBreakMode = .byTruncatingTail
         tf.frame         = bounds
-
-        let shadow = NSShadow()
-        shadow.shadowColor      = NSColor.black.withAlphaComponent(0.75)
-        shadow.shadowOffset     = NSSize(width: 0, height: -1)
-        shadow.shadowBlurRadius = 2
-        tf.shadow = shadow
-
+        tf.autoresizingMask = [.width, .height]
         addSubview(tf)
     }
 
     required init?(coder: NSCoder) { nil }
 
+    override func rightMouseDown(with event: NSEvent) { onContextClick?() }
+
     override func mouseDown(with event: NSEvent) {
-        if event.clickCount == 2 { onDoubleClick?() }
+        // Ctrl-click is the macOS-standard equivalent of a right-click.
+        if event.modifierFlags.contains(.control) { onContextClick?() }
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
