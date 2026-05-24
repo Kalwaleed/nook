@@ -1,15 +1,23 @@
 import AppKit
 import NookKit
 
-@NSApplicationMain
+@main
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let spaceStore = SpaceStore(defaults: UserDefaults(suiteName: "com.kalwaleed.nook")!)
-    private let spaceTracker = CGSSpaceTracker()
-    private let loginItemManager = LoginItemManager()
-    private let accessibilityManager = AccessibilityPermissionManager()
+    private lazy var spaceStore = SpaceStore(defaults: UserDefaults(suiteName: "com.kalwaleed.nook") ?? .standard)
+    private lazy var spaceTracker = CGSSpaceTracker()
+    private lazy var loginItemManager = LoginItemManager()
+    private lazy var accessibilityManager = AccessibilityPermissionManager()
     private var statusBarController: StatusBarController?
     private var nookBarController: NookBarController?
+    private var missionControlLabelController: MissionControlLabelController?
     private var settingsWindowController: SettingsWindowController?
+
+    static func main() {
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        _ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         accessibilityManager.checkAndRequestIfNeeded()
@@ -19,6 +27,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onShowSettings: { [weak self] in self?.showSettings() }
         )
         nookBarController = NookBarController(
+            store: spaceStore,
+            tracker: spaceTracker,
+            renameController: RenameController(store: spaceStore)
+        )
+        missionControlLabelController = MissionControlLabelController(
             store: spaceStore,
             tracker: spaceTracker,
             renameController: RenameController(store: spaceStore)
