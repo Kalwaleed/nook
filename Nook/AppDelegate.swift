@@ -8,7 +8,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var loginItemManager = LoginItemManager()
     private lazy var accessibilityManager = AccessibilityPermissionManager()
     private var statusBarController: StatusBarController?
-    private var nookBarController: NookBarController?
     private var missionControlLabelController: MissionControlLabelController?
     private var settingsWindowController: SettingsWindowController?
 
@@ -25,11 +24,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             store: spaceStore,
             tracker: spaceTracker,
             onShowSettings: { [weak self] in self?.showSettings() }
-        )
-        nookBarController = NookBarController(
-            store: spaceStore,
-            tracker: spaceTracker,
-            renameController: RenameController(store: spaceStore)
         )
         missionControlLabelController = MissionControlLabelController(
             store: spaceStore,
