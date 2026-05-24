@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var accessibilityManager = AccessibilityPermissionManager()
     private var statusBarController: StatusBarController?
     private var missionControlLabelController: MissionControlLabelController?
+    private var notchManager: NotchManager?
     private var settingsWindowController: SettingsWindowController?
 
     static func main() {
@@ -30,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             tracker: spaceTracker,
             renameController: RenameController(store: spaceStore)
         )
+        notchManager = NotchManager(store: spaceStore, tracker: spaceTracker)
     }
 
     @objc func showSettings() {
