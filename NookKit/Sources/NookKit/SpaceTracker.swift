@@ -15,6 +15,14 @@ public struct SpaceInfo: Equatable {
     public let uuid: String
     public let displayID: UInt32
     public let isActive: Bool
+    public let isFullScreen: Bool
+
+    public init(uuid: String, displayID: UInt32, isActive: Bool, isFullScreen: Bool = false) {
+        self.uuid = uuid
+        self.displayID = displayID
+        self.isActive = isActive
+        self.isFullScreen = isFullScreen
+    }
 }
 
 public protocol SpaceTrackerProtocol: AnyObject {
@@ -66,7 +74,8 @@ public final class CGSSpaceTracker: SpaceTrackerProtocol {
             let spaceList = display["Spaces"] as? [[String: Any]] ?? []
             for space in spaceList {
                 guard let uuid = space["uuid"] as? String else { continue }
-                result.append(SpaceInfo(uuid: uuid, displayID: displayID, isActive: uuid == activeUUID))
+                let isFullScreen = (space["type"] as? Int) == 1
+                result.append(SpaceInfo(uuid: uuid, displayID: displayID, isActive: uuid == activeUUID, isFullScreen: isFullScreen))
             }
         }
         return result
