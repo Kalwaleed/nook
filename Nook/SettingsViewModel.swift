@@ -33,6 +33,9 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func setName(_ name: String, for uuid: String) {
+        if let idx = spaceNames.firstIndex(where: { $0.uuid == uuid }) {
+            spaceNames[idx] = (uuid: uuid, name: name)
+        }
         Task {
             if name.isEmpty {
                 await store.deleteName(for: uuid)

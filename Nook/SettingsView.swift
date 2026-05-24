@@ -2,11 +2,13 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel
+    let onDismiss: () -> Void
     @State private var pendingNames: [String: String] = [:]
     @State private var isLaunchAtLoginEnabled: Bool
 
-    init(viewModel: SettingsViewModel) {
+    init(viewModel: SettingsViewModel, onDismiss: @escaping () -> Void) {
         self.viewModel = viewModel
+        self.onDismiss = onDismiss
         _isLaunchAtLoginEnabled = State(initialValue: viewModel.loginItemManager.isEnabled)
     }
 
@@ -52,17 +54,19 @@ struct SettingsView: View {
 
             HStack {
                 Spacer()
-                Button("Cancel") { pendingNames.removeAll() }
-                    .keyboardShortcut(.cancelAction)
-                    .disabled(!hasPendingChanges)
+                Button("Cancel") {
+                    pendingNames.removeAll()
+                    onDismiss()
+                }
+                .keyboardShortcut(.cancelAction)
                 Button("OK") {
                     for (uuid, name) in pendingNames {
                         viewModel.setName(name, for: uuid)
                     }
                     pendingNames.removeAll()
+                    onDismiss()
                 }
                 .keyboardShortcut(.defaultAction)
-                .disabled(!hasPendingChanges)
             }
             .padding(12)
         }
@@ -81,6 +85,4 @@ struct SettingsView: View {
             }
         )
     }
-
-    private var hasPendingChanges: Bool { !pendingNames.isEmpty }
 }
