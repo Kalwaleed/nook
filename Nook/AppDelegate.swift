@@ -2,5 +2,9 @@ import AppKit
 
 @NSApplicationMain
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {}
+    private let accessibilityManager = AccessibilityPermissionManager()
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        accessibilityManager.checkAndRequestIfNeeded()
+    }
 }
