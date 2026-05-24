@@ -11,23 +11,24 @@ private func CGSMainConnectionID() -> CGSConnectionID
 @_silgen_name("CGSCopyManagedDisplaySpaces")
 private func CGSCopyManagedDisplaySpaces(_ cid: CGSConnectionID) -> CFArray
 
-struct SpaceInfo: Equatable {
-    let uuid: String
-    let displayID: UInt32
-    let isActive: Bool
+public struct SpaceInfo: Equatable {
+    public let uuid: String
+    public let displayID: UInt32
+    public let isActive: Bool
 }
 
-protocol SpaceTrackerProtocol: AnyObject {
+public protocol SpaceTrackerProtocol: AnyObject {
     func spaces(for displayID: UInt32) -> [SpaceInfo]
     func activeSpace(for displayID: UInt32) -> SpaceInfo?
+    func allSpaces() -> [SpaceInfo]
     var spaceChanges: AnyPublisher<[SpaceInfo], Never> { get }
 }
 
-final class CGSSpaceTracker: SpaceTrackerProtocol {
+public final class CGSSpaceTracker: SpaceTrackerProtocol {
     private let subject = PassthroughSubject<[SpaceInfo], Never>()
     private var observer: NSObjectProtocol?
 
-    init() {
+    public init() {
         observer = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.activeSpaceDidChangeNotification,
             object: nil,
@@ -43,19 +44,19 @@ final class CGSSpaceTracker: SpaceTrackerProtocol {
         }
     }
 
-    func spaces(for displayID: UInt32) -> [SpaceInfo] {
+    public func spaces(for displayID: UInt32) -> [SpaceInfo] {
         allSpaces().filter { $0.displayID == displayID }
     }
 
-    func activeSpace(for displayID: UInt32) -> SpaceInfo? {
+    public func activeSpace(for displayID: UInt32) -> SpaceInfo? {
         spaces(for: displayID).first(where: { $0.isActive })
     }
 
-    var spaceChanges: AnyPublisher<[SpaceInfo], Never> {
+    public var spaceChanges: AnyPublisher<[SpaceInfo], Never> {
         subject.eraseToAnyPublisher()
     }
 
-    private func allSpaces() -> [SpaceInfo] {
+    public func allSpaces() -> [SpaceInfo] {
         let cid = CGSMainConnectionID()
         guard let displays = CGSCopyManagedDisplaySpaces(cid) as? [[String: Any]] else { return [] }
         var result: [SpaceInfo] = []
@@ -82,6 +83,10 @@ final class MockSpaceTracker: SpaceTrackerProtocol {
 
     func activeSpace(for displayID: UInt32) -> SpaceInfo? {
         stubbedSpaces[displayID]?.first(where: { $0.isActive })
+    }
+
+    func allSpaces() -> [SpaceInfo] {
+        stubbedSpaces.values.flatMap { $0 }
     }
 
     func simulateSpaceChange(spaces: [SpaceInfo]) {
