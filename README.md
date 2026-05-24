@@ -1,5 +1,7 @@
 # Nook
 
+[![CI](https://github.com/Kalwaleed/nook/actions/workflows/ci.yml/badge.svg)](https://github.com/Kalwaleed/nook/actions/workflows/ci.yml)
+
 Custom names for your macOS Spaces, shown in Mission Control and in your display's notch.
 
 macOS labels every virtual desktop "Desktop 1", "Desktop 2", etc. Nook lets you name them — "Coding", "Shopping", "Email" — and shows the name wherever you need it.
