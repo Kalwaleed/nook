@@ -7,11 +7,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let spaceTracker = CGSSpaceTracker()
     private let loginItemManager = LoginItemManager()
     private let accessibilityManager = AccessibilityPermissionManager()
+    private var statusBarController: StatusBarController?
     private var nookBarController: NookBarController?
     private var settingsWindowController: SettingsWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         accessibilityManager.checkAndRequestIfNeeded()
+        statusBarController = StatusBarController(
+            store: spaceStore,
+            tracker: spaceTracker,
+            onShowSettings: { [weak self] in self?.showSettings() }
+        )
         nookBarController = NookBarController(
             store: spaceStore,
             tracker: spaceTracker,
