@@ -9,9 +9,9 @@ macOS labels every virtual desktop "Desktop 1", "Desktop 2", etc. Nook lets you 
 ## Features
 
 - **Labels in Mission Control** — named Spaces show their Name instead of "Desktop N"; unnamed Spaces keep the default.
-- **Nook Bar** — a persistent display in your MacBook's notch (or a floating pill on non-notch screens) always shows your Active Space's Name.
+- **Hover-activated Notch** — on notched MacBooks, hovering the notch expands a small surface showing your Active Space's Name.
 - **Per-display** — each screen tracks its own Active Space independently.
-- **Rename inline** — double-click a Label in Mission Control, or click the Nook Bar.
+- **Rename inline** — double-click a Label in Mission Control.
 - **Collision-safe** — two Spaces named "Coding" become "Coding 1" and "Coding 2" automatically.
 - **UUID-tracked** — Names follow their Space through reorders and reboots.
 
@@ -32,4 +32,9 @@ Read [`CONTEXT.md`](CONTEXT.md) for the domain vocabulary and [`PRD.md`](PRD.md)
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+GPL-3.0 — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+
+The notch-activation surface in `Nook/Notch/` is derived from
+[mew-notch](https://github.com/monuk7735/mew-notch) (GPL-3.0) by Monu Kumar.
+Per GPL copyleft, the combined work is now distributed under GPL-3.0; the
+pre-GPL MIT history is preserved in `NOTICE`.
