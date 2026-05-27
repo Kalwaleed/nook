@@ -47,6 +47,10 @@ Grab the latest `.dmg` from [Releases](https://github.com/Kalwaleed/nook/release
 
 Nook is notarized and fully open source, so if you'd rather build it yourself, see [Contributing](#contributing).
 
+ORRRRR
+
+Just ask Claude to do it :) 
+
 ## How it works (the 30-second version)
 
 Nook polls the macOS Accessibility tree to find Mission Control's layout, then floats a transparent overlay window on top with your custom names. It uses a `SpaceStore` actor backed by `UserDefaults` to persist the name ↔ Space-UUID mapping, so names survive reboots and reorders.
