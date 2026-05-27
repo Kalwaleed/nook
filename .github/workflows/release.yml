@@ -1,0 +1,100 @@
+name: Release
+
+# Triggered when a version tag is pushed, e.g. git tag v1.0.0 && git push --tags
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#
+#   DEVELOPER_ID_CERT_P12       Base64-encoded Developer ID Application .p12 certificate
+#                               Export from Keychain Access, then: base64 -i Cert.p12 | pbcopy
+#   DEVELOPER_ID_CERT_PASSWORD  Password used when exporting the .p12
+#   APPLE_TEAM_ID               10-character Apple Developer Team ID (developer.apple.com → Membership)
+#   APPLE_API_KEY_ID            Key ID from App Store Connect → Users and Access → Integrations → API Keys
+#   APPLE_API_KEY_ISSUER_ID     Issuer ID from the same App Store Connect page
+#   APPLE_API_KEY_P8            Full contents of the downloaded .p8 private key file
+#
+# GITHUB_TOKEN is provided automatically by GitHub Actions — no configuration needed.
+
+jobs:
+  release:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Import Developer ID certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.DEVELOPER_ID_CERT_P12 }}
+          p12-password: ${{ secrets.DEVELOPER_ID_CERT_PASSWORD }}
+
+      - name: Build archive
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project Nook.xcodeproj \
+            -scheme Nook \
+            -archivePath "$RUNNER_TEMP/Nook.xcarchive" \
+            -destination 'platform=macOS,arch=arm64' \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGNING_REQUIRED=YES \
+            CODE_SIGNING_ALLOWED=YES
+
+      - name: Extract .app from archive
+        run: |
+          cp -R "$RUNNER_TEMP/Nook.xcarchive/Products/Applications/Nook.app" \
+            "$RUNNER_TEMP/Nook.app"
+
+      - name: Zip .app for notarization
+        run: |
+          ditto -c -k --keepParent "$RUNNER_TEMP/Nook.app" "$RUNNER_TEMP/Nook.zip"
+
+      - name: Notarize
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        run: |
+          echo "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/api_key.p8"
+          xcrun notarytool submit "$RUNNER_TEMP/Nook.zip" \
+            --key "$RUNNER_TEMP/api_key.p8" \
+            --key-id "$APPLE_API_KEY_ID" \
+            --issuer "$APPLE_API_KEY_ISSUER_ID" \
+            --wait
+          rm "$RUNNER_TEMP/api_key.p8"
+
+      - name: Staple notarization ticket
+        run: xcrun stapler staple "$RUNNER_TEMP/Nook.app"
+
+      - name: Create .dmg
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          hdiutil create \
+            -volname "Nook" \
+            -srcfolder "$RUNNER_TEMP/Nook.app" \
+            -ov -format UDZO \
+            "$RUNNER_TEMP/Nook-${TAG}.dmg"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" \
+            "$RUNNER_TEMP/Nook-${TAG}.dmg" \
+            --title "Nook ${TAG}" \
+            --generate-notes
