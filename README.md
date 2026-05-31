@@ -43,12 +43,6 @@ Notice how the named Spaces show their names and the unnamed ones politely fall 
 
 ## Install
 
-Grab the latest `.dmg` from [Releases](https://github.com/Kalwaleed/nook/releases), open it, drag Nook to Applications, launch it once.
-
-Nook is notarized and fully open source, so if you'd rather build it yourself, see [Contributing](#contributing).
-
-ORRRRR
-
 Just ask Claude to do it :) 
 
 ## How it works (the 30-second version)
